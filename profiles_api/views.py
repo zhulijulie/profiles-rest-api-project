@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
+from rest_framework import filters
 
 from profiles_api import serializers
 from profiles_api import models
@@ -119,5 +120,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     #every request we make to their API that we need to authenticate we add this
     #token string to the request and that's effectively a password to check that
     #every request made is authenticated correctly
-    authentication_classes = (TokenAuthentication,) #need to have the "," to make it a tuple
+    authentication_classes = (TokenAuthentication,) #need to have the "," to make it a tuple, instead of a single item
     permission_classes = (permissions.UpdateOwnProfile,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', 'email',)
