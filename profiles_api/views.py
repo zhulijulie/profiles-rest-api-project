@@ -2,8 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication
 
 from profiles_api import serializers
+from profiles_api import models
+from profiles_api import permissions
+
 
 class HelloApiView(APIView):
     """Test API View"""
@@ -51,6 +55,7 @@ class HelloApiView(APIView):
         return Response({'method': 'DELETE'})
 
 
+#use regular viewset
 class HelloViewSet(viewsets.ViewSet):
     """Test API ViewSet"""
     serializer_class = serializers.HelloSerializer
@@ -99,3 +104,20 @@ class HelloViewSet(viewsets.ViewSet):
         """Handle removing an object"""
 
         return Response({'http_method': 'DELETE'})
+
+
+#the way you use a model viewset is you connect it up to a
+#serializer class just like you would a regular view set and you provide a query
+#set to the model viewset so it knows which objects in the database are going
+#to be managed through this viewset
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """Handle creating, creating and updating profiles"""
+    #The Django rest framework knows the standard functions that you would want to perform on the model viewset
+    serializer_class = serializers.UserProfileSerializer
+    queryset = models.UserProfile.objects.all()
+    # generating a random token string when the user logs in and then
+    #every request we make to their API that we need to authenticate we add this
+    #token string to the request and that's effectively a password to check that
+    #every request made is authenticated correctly
+    authentication_classes = (TokenAuthentication,) #need to have the "," to make it a tuple
+    permission_classes = (permissions.UpdateOwnProfile,)
