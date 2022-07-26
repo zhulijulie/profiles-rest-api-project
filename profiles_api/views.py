@@ -6,6 +6,8 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework import filters
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
+#from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 
 from profiles_api import serializers
 from profiles_api import models
@@ -132,3 +134,27 @@ class UserLoginApiView(ObtainAuthToken):
    #enable it in the browsable Django admin site so we need to override this class
    #and customize it so it's visible in the browsable api for test
    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
+
+class UserProfileFeedViewSet(viewsets.ModelViewSet):
+    """Handles creating, reading and updating profile feed items"""
+    serializer_class = serializers.ProfileFeedItemSerializer
+    queryset = models.ProfileFeedItem.objects.all()
+    authentication_classes = (TokenAuthentication,)
+
+    # permission_classes = (
+    #     permissions.UpdateOwnStatus,
+    #     IsAuthenticatedOrReadOnly
+    # )
+    permission_classes = (permissions.UpdateOwnStatus, IsAuthenticated) #limited the api to only authenticated user only
+
+    #override the behavior or customize the behavior for creating objects through a model Viewset
+    #so when a request gets made to our view set it gets passed into
+    # our serializer class and validated and then the serializer dot save function is called by default
+    def perform_create(self, serializer):
+        """Sets the user profile to the logged in user"""
+        serializer.save(user_profile=self.request.user)
+        #the request object is an object that gets passed into all view sets every time a request is made
+        #it contains all of the details about the request being made to the view set
+        #because we've added the token authentication to our view set if the user has authenticated then the request will have a user associated to the
+        #authenticated user so this user field gets added whenever the user is authenticated
